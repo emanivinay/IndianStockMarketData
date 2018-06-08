@@ -12,5 +12,6 @@
   </properties>
   <modules>
     <module>stock-updater</module>
+    <module>app-frontend</module>
   </modules>
 </project>

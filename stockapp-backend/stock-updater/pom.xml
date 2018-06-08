@@ -6,20 +6,14 @@
     <groupId>club.vinnymaker</groupId>
     <version>1.0-SNAPSHOT</version>
   </parent>
-
-  <groupId>club.vinnymaker</groupId>
   <artifactId>stock-updater</artifactId>
-  <version>1.0-SNAPSHOT</version>
 
   <name>stock-updater</name>
-  <description>A simple stock-updater.</description>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
+  <description>The stock-updater module</description>
+  <url>https://box1.vinnymaker.club</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
   <dependencies>

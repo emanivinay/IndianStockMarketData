@@ -14,4 +14,11 @@
     <module>stock-updater</module>
     <module>app-frontend</module>
   </modules>
+  <dependencies>
+  	<dependency>
+  		<groupId>org.json</groupId>
+  		<artifactId>json</artifactId>
+  		<version>20180130</version>
+  	</dependency>
+  </dependencies>
 </project>

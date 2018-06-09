@@ -13,6 +13,7 @@
   <modules>
     <module>stock-updater</module>
     <module>app-frontend</module>
+    <module>stockapp-datastore</module>
   </modules>
   <dependencies>
   	<dependency>

@@ -32,8 +32,6 @@ public class RoutingServlet extends HttpServlet {
 			requestMethod = method;
 			this.controller = controller;
 		}
-		
-		// UserController.getUser;
 	}
 	
 	static {

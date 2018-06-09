@@ -12,7 +12,7 @@ import org.json.JSONObject;
 public class UserController {
 	public static void getUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		JSONObject obj = new JSONObject();
-		obj.put("key", "value");
+		obj.put("pathInfo", req.getPathInfo());
 		resp.setStatus(200);
 		
 		PrintWriter pw = resp.getWriter();
@@ -20,9 +20,9 @@ public class UserController {
 		pw.close();
 	}
 	
-	public static void createUser(HttpServletRequest req, HttpServletResponse resp) {
+	public static void createUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 	}
 	
-	public static void getUserFavorites(HttpServletRequest req, HttpServletResponse resp) {
+	public static void getUserFavorites(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 	}
 }

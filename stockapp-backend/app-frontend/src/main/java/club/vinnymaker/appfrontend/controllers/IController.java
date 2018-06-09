@@ -1,4 +1,4 @@
-package club.vinnymaker.appfrontend;
+package club.vinnymaker.appfrontend.controllers;
 
 import java.io.IOException;
 

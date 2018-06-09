@@ -1,7 +1,6 @@
 package club.vinnymaker.appfrontend;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -12,6 +11,7 @@ import org.bigtesting.routd.Route;
 import org.bigtesting.routd.Router;
 import org.bigtesting.routd.TreeRouter;
 
+import club.vinnymaker.appfrontend.controllers.IController;
 import club.vinnymaker.appfrontend.controllers.UserController;
 import lombok.Getter;
 

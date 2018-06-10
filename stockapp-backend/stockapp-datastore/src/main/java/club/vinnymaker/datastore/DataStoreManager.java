@@ -4,6 +4,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
+import lombok.Getter;
+
+@Getter
 public class DataStoreManager {
 	private static DataStoreManager dataStoreMgr = null;
 	private SessionFactory factory = null;
@@ -16,6 +19,12 @@ public class DataStoreManager {
 		try {
 			factory = new Configuration().configure().buildSessionFactory();
 		} catch (HibernateException e) {
+		}
+	}
+	
+	public void shutdown() {
+		if (factory != null) {
+			factory.close();
 		}
 	}
 	

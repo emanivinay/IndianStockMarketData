@@ -28,7 +28,7 @@ public class DataStoreManager {
 		}
 	}
 	
-	public DataStoreManager getInstance() {
+	public static DataStoreManager getInstance() {
 		if (dataStoreMgr == null) {
 			dataStoreMgr = new DataStoreManager();
 		}

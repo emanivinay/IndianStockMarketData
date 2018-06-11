@@ -11,6 +11,6 @@
 		<property name="hibernate.connection.username">postgres</property>"
 		
 		<!-- Resource mappings start here -->
-		<!--  <mapping resource="hibernate_mappings/User.xml" /> -->
+		<mapping resource="hibernate_mappings/User.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>

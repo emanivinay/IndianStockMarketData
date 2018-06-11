@@ -14,5 +14,6 @@ public class User {
 	private Date dateCreated;
 	
 	public User() {
+		id = -1;
 	}
 }

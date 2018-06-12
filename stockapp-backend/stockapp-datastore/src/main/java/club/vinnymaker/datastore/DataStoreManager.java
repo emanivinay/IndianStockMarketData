@@ -19,6 +19,7 @@ public class DataStoreManager {
 		try {
 			factory = new Configuration().configure().buildSessionFactory();
 		} catch (HibernateException e) {
+			e.printStackTrace();
 		}
 	}
 	

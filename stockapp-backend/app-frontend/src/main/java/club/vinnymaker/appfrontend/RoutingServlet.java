@@ -2,12 +2,16 @@ package club.vinnymaker.appfrontend;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.bigtesting.routd.NamedParameterElement;
 import org.bigtesting.routd.Route;
 import org.bigtesting.routd.Router;
 import org.bigtesting.routd.TreeRouter;
@@ -71,12 +75,21 @@ public class RoutingServlet extends HttpServlet {
 		}
 	}
 	
+	private static Map<String, String> getVariableParams(Route route, String path) {
+		Map<String, String> ret = new HashMap<>();
+		for (NamedParameterElement elem : route.getNamedParameterElements()) {
+			String value = route.getNamedParameter(elem.name(), path);
+			ret.put(elem.name(), value);
+		}
+		return ret;
+	}
+	
 	// Does some sanity checking, set some response headers and call the controller method.
 	private static void handle(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		resp.setHeader("Content-Type", "application/json");
 		checkRequestAndThrow(req, resp);
 		APIRoute route = (APIRoute) router.route(req.getPathInfo());
-		route.getController().view(req, resp);
+		route.getController().view(req, resp, getVariableParams(route, req.getPathInfo()));
 	}
 	
 	@Override

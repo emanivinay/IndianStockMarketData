@@ -1,5 +1,7 @@
 package club.vinnymaker.datastore;
 
+import java.util.Date;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -19,24 +21,62 @@ public class UserManager {
 		return userMgr;
 	}
 	
-	public Long createUser(User newUser) {
+	private String createRandomSalt() {
+		return "sat";
+	}
+	
+	private String getPasswordHash(String password, String salt) {
+		return "has";
+	}
+	
+	public User loadUser(long userId) {
 		Session session = DataStoreManager.getInstance().getFactory().openSession();
 		Transaction tx = null;
-		Long newUserId = null;
 		
 		try {
 			tx = session.beginTransaction();
-			newUserId = (Long) session.save(newUser);
+			User user = (User) session.get(User.class, userId);
 			tx.commit();
-		} catch (HibernateException e) {
+			return user;
+		} catch(HibernateException e) {
+			e.printStackTrace();
 			if (tx != null) {
 				tx.rollback();
 			}
-			newUserId = null;
 		} finally {
-			session.close();
+			if (session != null) {
+				session.close();
+			}
 		}
 		
-		return newUserId;
+		return null;
+	}
+	
+	public Long createUser(String username, String password) {
+		Session session = DataStoreManager.getInstance().getFactory().openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			User user = new User();
+			String salt = createRandomSalt();
+			String hash = getPasswordHash(password, salt);
+			
+			user.setUsername(username);
+			user.setPasswordHash(hash);
+			user.setPasswordSalt(salt);
+			user.setDateCreated(new Date(System.currentTimeMillis()));
+			Long id = (Long) session.save(user);
+			tx.commit();
+			return id;
+		} catch (HibernateException e) {
+			e.printStackTrace();
+			if (tx != null)
+				tx.rollback();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return null;
 	}
 }

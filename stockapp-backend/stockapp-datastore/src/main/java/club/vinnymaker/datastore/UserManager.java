@@ -1,6 +1,11 @@
 package club.vinnymaker.datastore;
 
 import java.util.Date;
+import java.util.List;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -15,6 +20,7 @@ public class UserManager {
 	
 	public static final String USERNAME_INVALID_ERROR = "Username must be alphanumeric and at least 5 chars long";
 	public static final String PASSWORD_INVALID_ERROR = "Password must be alphanumeric and at least 8 chars long";
+	public static final String USERNAME_ALREADY_EXISTS = "Username already taken. Use another one";
 
 	
 	// loadUser, createUser, updateUser, deleteUser.
@@ -39,6 +45,14 @@ public class UserManager {
 		return "has";
 	}
 	
+	/**
+	 * Load a user from database by user id. If such a user is already persistent, it's returned
+	 * automatically. If no user exists with the id, null is returned.
+	 *  
+	 * @param userId Id of the user to load.
+	 * 
+	 * @return User object if loaded successfully, null otherwise.
+	 */
 	public User loadUser(long userId) {
 		Session session = DataStoreManager.getInstance().getFactory().openSession();
 		Transaction tx = null;
@@ -60,6 +74,41 @@ public class UserManager {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Load a user from db by username.
+	 * 
+	 * @param username Username of the user to load.
+	 * 
+	 * @return User object if successful, null otherwise.
+	 */
+	public User loadUser(String username) {
+		Session session = DataStoreManager.getInstance().getFactory().openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<User> query = builder.createQuery(User.class);
+			Root<User> root = query.from(User.class);
+			query.select(root).where(builder.equal(root.<String>get("username"), username));
+			List<User> users = session.createQuery(query).getResultList();
+			if (users.size() == 0) {
+				// no user exists with the given username.
+				return null;
+			}
+			tx.commit();
+			return users.get(0);
+		} catch (HibernateException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
+			return null;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
 	}
 	
 	/**
@@ -139,6 +188,11 @@ public class UserManager {
 			throw new InvalidUserException(USERNAME_INVALID_ERROR);
 		}
 		
+		// Check if the username is taken already.
+		if (loadUser(username) != null)  {
+			throw new InvalidUserException(USERNAME_ALREADY_EXISTS);
+		}
+		
 		Session session = DataStoreManager.getInstance().getFactory().openSession();
 		Transaction tx = null;
 		try {
@@ -155,9 +209,11 @@ public class UserManager {
 			tx.commit();
 			return id;
 		} catch (HibernateException e) {
+			// TODO(vinay) -> Error occurred during the transaction, it must be logged.
 			e.printStackTrace();
-			if (tx != null)
+			if (tx != null) {
 				tx.rollback();
+			}
 		} finally {
 			if (session != null) {
 				session.close();

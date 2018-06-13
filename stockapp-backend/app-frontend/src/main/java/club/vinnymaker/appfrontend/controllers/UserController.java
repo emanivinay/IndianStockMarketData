@@ -109,7 +109,7 @@ public class UserController extends BaseController {
 						success(resp, EMPTY_JSON_OBJ);
 					}
 				} catch (InvalidUserException e) {
-					// username/password are wrong, return a 404 response.
+					// username/password are wrong, return a 400 response.
 					error(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
 				}
 				

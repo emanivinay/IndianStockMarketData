@@ -1,7 +1,11 @@
 package club.vinnymaker.appfrontend.controllers;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,6 +25,9 @@ public class UserController extends BaseController {
 	private static final String PASSWORD_NOT_PRESENT_ERROR = "'password' key is required";
 	private static final String USERNAME_KEY = "username";
 	private static final String USERNAME_NOT_PRESENT_ERROR = "'username' key is required";
+	
+	private static final DateFormat USER_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy KK:mm:ss a Z");
+	private static final String GMT_TIMEZONE_ID = "GMT+00:00";
 	
 	/**
 	 * Fetches the user details with the given id and returns a JSON response.
@@ -43,7 +50,13 @@ public class UserController extends BaseController {
 		// remove sensitive items from this object.
 		obj.remove("passwordHash");
 		obj.remove("passwordSalt");
+		obj.put("dateCreated", getDateInUTC(user.getDateCreated()));
 		success(resp, obj);
+	}
+	
+	private static String getDateInUTC(Date date) {
+		USER_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone(GMT_TIMEZONE_ID));
+		return USER_DATE_FORMAT.format(date);
 	}
 	
 	/**

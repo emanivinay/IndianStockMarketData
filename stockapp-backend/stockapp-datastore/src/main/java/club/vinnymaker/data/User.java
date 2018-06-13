@@ -36,8 +36,4 @@ public class User {
 	
 	public User() {
 	}
-	
-	public void setNewPassword(String newPassword) {
-		// TODO(vinay) -> Implement this.
-	}
 }

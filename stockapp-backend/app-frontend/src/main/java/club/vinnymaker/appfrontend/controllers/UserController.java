@@ -12,6 +12,8 @@ import club.vinnymaker.data.User;
 import club.vinnymaker.datastore.InvalidUserException;
 import club.vinnymaker.datastore.UserManager;
 
+import static club.vinnymaker.datastore.UserManager.PASSWORD_INVALID_ERROR;
+
 // Controller methods must be thread safe. 
 public class UserController extends BaseController {
 	
@@ -79,7 +81,13 @@ public class UserController extends BaseController {
 				error(resp, HttpServletResponse.SC_BAD_REQUEST, PASSWORD_NOT_PRESENT_ERROR);
 				return;
 			}
+			
+			// Validate the new password first.
 			String password = req.getParameter(PASSWORD_KEY);
+			if (!UserManager.isValidPassword(password)) {
+				error(resp, HttpServletResponse.SC_BAD_REQUEST, PASSWORD_INVALID_ERROR);
+				return;
+			}
 			
 			if (!isUserIdPresent) {
 				// New user creation. Must have a valid username.
@@ -109,7 +117,6 @@ public class UserController extends BaseController {
 				Long userId = Long.parseLong(req.getParameter(ID_KEY));
 				// Update existing user. Currently, only passwords can be updated.
 				User user = UserManager.getInstance().loadUser(userId);
-				user.setNewPassword(password);
 				try {
 					if (UserManager.getInstance().updateUser(user)) {
 						// successfully updated the user.

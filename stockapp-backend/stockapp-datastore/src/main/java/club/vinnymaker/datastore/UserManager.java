@@ -10,8 +10,12 @@ import club.vinnymaker.data.User;
 
 public class UserManager {
 	
-	private static final int USERNAME_LENGTH_MIN = 5;
-	private static final int PASSWORD_LENGTH_MIN = 8;
+	public static final int USERNAME_LENGTH_MIN = 5;
+	public static final int PASSWORD_LENGTH_MIN = 8;
+	
+	public static final String USERNAME_INVALID_ERROR = "Username must be alphanumeric and at least 5 chars long";
+	public static final String PASSWORD_INVALID_ERROR = "Password must be alphanumeric and at least 8 chars long";
+
 	
 	// loadUser, createUser, updateUser, deleteUser.
 	private static UserManager userMgr = null;
@@ -130,12 +134,9 @@ public class UserManager {
 	 * @throws InvalidUserException when username or password provided is not valid.
 	 */
 	public Long createUser(String username, String password) throws InvalidUserException {
-		// First validate username and password.
+		// Password is validated at this point. So just validate the username.
 		if (!isValidAlphaInput(username, USERNAME_LENGTH_MIN)) {
-			throw new InvalidUserException("Invalid username. Username must be alphanumeric and atleast 5 characters long.");
-		}
-		if (!isValidAlphaInput(password, PASSWORD_LENGTH_MIN)) {
-			throw new InvalidUserException("Invalid password. Password must be at least 8 chars long and alphanumeric");
+			throw new InvalidUserException(USERNAME_INVALID_ERROR);
 		}
 		
 		Session session = DataStoreManager.getInstance().getFactory().openSession();
@@ -175,11 +176,21 @@ public class UserManager {
 		return true;
 	}
 	
-	private static boolean isValidAlphaInput(String username, int minLength) {
+	public static boolean isValidAlphaInput(String username, int minLength) {
 		if (username == null || username.length() < minLength) {
 			return false;
 		}
 		
 		return isAlphaNumeric(username);
+	}
+	
+	/**
+	 * Validate that the password.(Currently, it must be alphanumeric and 8 chars long min).
+	 * 
+	 * @param password Password to be validated.
+	 * @return True if the input is a valid password, false otherwise.
+	 */
+	public static boolean isValidPassword(String password) {
+		return isValidAlphaInput(password, PASSWORD_LENGTH_MIN);
 	}
 }

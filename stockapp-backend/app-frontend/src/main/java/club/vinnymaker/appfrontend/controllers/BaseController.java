@@ -53,7 +53,8 @@ public abstract class BaseController {
 	
 	/**
 	 * Constructs a json response in case of a internal server error.
-	 * @param resp
+	 * 
+	 * @param resp HTTP 500 response. 
 	 * @throws IOException
 	 */
 	protected static void internal_error(HttpServletResponse resp) {

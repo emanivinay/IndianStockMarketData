@@ -118,7 +118,7 @@ public class UserController extends BaseController {
 				// Update existing user. Currently, only passwords can be updated.
 				User user = UserManager.getInstance().loadUser(userId);
 				try {
-					if (UserManager.getInstance().updateUser(user)) {
+					if (UserManager.getInstance().updateUser(user, password)) {
 						// successfully updated the user.
 						success(resp, EMPTY_JSON_OBJ);
 					} else {

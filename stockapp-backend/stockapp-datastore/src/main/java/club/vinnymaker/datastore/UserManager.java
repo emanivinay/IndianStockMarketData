@@ -10,6 +10,7 @@ import javax.persistence.criteria.Root;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.mindrot.jbcrypt.BCrypt;
 
 import club.vinnymaker.data.User;
 
@@ -36,13 +37,15 @@ public class UserManager {
 	}
 	
 	private String createRandomSalt() {
-		// TODO(vinay) -> Implement this.
-		return "sat";
+		return BCrypt.gensalt();
 	}
 	
 	private String getPasswordHash(String password, String salt) {
-		// TODO(vinay) -> Implement this.
-		return "has";
+		return BCrypt.hashpw(password, salt);
+	}
+	
+	private boolean verifyPassword(String candidate, String storedHash) {
+		return BCrypt.checkpw(candidate, storedHash);
 	}
 	
 	/**
@@ -115,11 +118,18 @@ public class UserManager {
 	 * Verifies that the user details are valid and persists an updated user in the database.
 	 *   
 	 * @param user A detached User object whose value has just changed.
-	 * @return True if successfully updated, false otherwise.
+	 * @param newPassword New password for this user.
 	 * 
+	 * @return True if successfully updated, false otherwise.
 	 * @throws InvalidUserException when the user details are not valid.
 	 */
-	public boolean updateUser(User user) throws InvalidUserException {
+	public boolean updateUser(User user, String newPassword) throws InvalidUserException {
+		// Update password hash + salt in the user object.
+		String newSalt = createRandomSalt();
+		String newHash = getPasswordHash(newPassword, newSalt);
+		user.setPasswordHash(newHash);
+		user.setPasswordSalt(newSalt);
+		
 		Session session = DataStoreManager.getInstance().getFactory().openSession();
 		Transaction tx = null;
 		try {

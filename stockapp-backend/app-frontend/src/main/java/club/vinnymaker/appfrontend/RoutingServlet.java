@@ -44,9 +44,8 @@ public class RoutingServlet extends HttpServlet {
 	
 	static {
 		router = new TreeRouter();
-		router.add(new APIRoute("/user/:id<[0-9]+>", "GET", UserController::getUser));
-		router.add(new APIRoute("/user/create", "POST", UserController::createUser));
-		router.add(new APIRoute("/user/:id<[0-9]+>/favorites", "GET", UserController::getUserFavorites));
+		router.add(new APIRoute("/users/:id<[0-9]+>", "GET", UserController::getUser));
+		router.add(new APIRoute("/users", "POST", UserController::createOrUpdateUser));
 	}
 	
 	private static String errorResponseBody(String errorReason) {

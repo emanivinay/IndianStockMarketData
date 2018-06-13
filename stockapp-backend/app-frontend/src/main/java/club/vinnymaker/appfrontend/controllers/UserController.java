@@ -1,7 +1,6 @@
 package club.vinnymaker.appfrontend.controllers;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,6 +9,7 @@ import org.json.JSONObject;
 
 import club.vinnymaker.appfrontend.RoutingServlet;
 import club.vinnymaker.data.User;
+import club.vinnymaker.datastore.InvalidUserException;
 import club.vinnymaker.datastore.UserManager;
 
 // Controller methods must be thread safe. 
@@ -58,7 +58,6 @@ public class UserController extends BaseController {
 		boolean isDeletion = req.getParameter(DELETE_KEY) != null;
 		boolean isUserIdPresent = req.getParameter(ID_KEY) != null;
 		
-		System.out.println("isDeletion=" + isDeletion + " isUserIdPresent=" + isUserIdPresent);
 		if (isDeletion) {
 			if (!isUserIdPresent) {
 				// delete requests should have id present. Return an invalid request error.
@@ -91,25 +90,36 @@ public class UserController extends BaseController {
 				}
 				
 				String username = req.getParameter(USERNAME_KEY);
-				Long newUserId = UserManager.getInstance().createUser(username, password);
-				if (newUserId == null) {
-					// error creating user. return an internal server error.
-					internal_error(resp);
-				} else {
-					// successfully created the user, return 200 with empty json.
-					success(resp, EMPTY_JSON_OBJ);
+				Long newUserId = null;
+				try {
+					newUserId = UserManager.getInstance().createUser(username, password);
+					if (newUserId == null) {
+						// error creating user. return an internal server error.
+						internal_error(resp);
+					} else {
+						// successfully created the user, return 200 with empty json.
+						success(resp, EMPTY_JSON_OBJ);
+					}
+				} catch (InvalidUserException e) {
+					// username/password are wrong, return a 404 response.
+					error(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
 				}
+				
 			} else {
 				Long userId = Long.parseLong(req.getParameter(ID_KEY));
 				// Update existing user. Currently, only passwords can be updated.
 				User user = UserManager.getInstance().loadUser(userId);
 				user.setNewPassword(password);
-				if (UserManager.getInstance().updateUser(user)) {
-					// successfully updated the user.
-					success(resp, EMPTY_JSON_OBJ);
-				} else {
-					// failed updating the user.
-					internal_error(resp);
+				try {
+					if (UserManager.getInstance().updateUser(user)) {
+						// successfully updated the user.
+						success(resp, EMPTY_JSON_OBJ);
+					} else {
+						// failed updating the user.
+						internal_error(resp);
+					}
+				} catch (InvalidUserException e) {
+					error(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
 				}
 			}
 		}

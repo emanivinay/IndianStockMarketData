@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 
-import club.vinnymaker.appfrontend.RoutingServlet;
 import club.vinnymaker.data.User;
 import club.vinnymaker.datastore.InvalidUserException;
 import club.vinnymaker.datastore.UserManager;
@@ -25,9 +24,15 @@ public class UserController extends BaseController {
 	private static final String PASSWORD_NOT_PRESENT_ERROR = "'password' key is required";
 	private static final String USERNAME_KEY = "username";
 	private static final String USERNAME_NOT_PRESENT_ERROR = "'username' key is required";
+	private static final String USER_NOT_FOUND = "No such user found";
 	
 	private static final DateFormat USER_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy KK:mm:ss a Z");
 	private static final String GMT_TIMEZONE_ID = "GMT+00:00";
+	
+	static {
+		// Set user date format to GMT timezone.
+		USER_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone(GMT_TIMEZONE_ID));
+	}
 	
 	/**
 	 * Fetches the user details with the given id and returns a JSON response.
@@ -42,7 +47,7 @@ public class UserController extends BaseController {
 		User user = UserManager.getInstance().loadUser(userId);
 		if (user == null) {
 			// no such user found, return 404.
-			RoutingServlet.sendError(resp, HttpServletResponse.SC_NOT_FOUND, "No such user found");
+			error(resp, HttpServletResponse.SC_NOT_FOUND, USER_NOT_FOUND);
 			return;
 		}
 		
@@ -55,7 +60,6 @@ public class UserController extends BaseController {
 	}
 	
 	private static String getDateInUTC(Date date) {
-		USER_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone(GMT_TIMEZONE_ID));
 		return USER_DATE_FORMAT.format(date);
 	}
 	

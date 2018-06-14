@@ -232,9 +232,12 @@ public class UserManager {
 		return null;
 	}
 	
-	private static boolean isAlphaNumeric(String s) {
+	private static boolean isGoodLetter(String s) {
 		for (int i = 0;i < s.length(); i++) {
-			if (!Character.isAlphabetic(s.charAt(i))) {
+			char c = s.charAt(i);
+			// digit, _, -, lowercase, uppercase.
+			if (!(Character.isDigit(c) || Character.isLowerCase(c) ||
+					Character.isUpperCase(c) || c == '_' || c == '-')) {
 				return false;
 			}
 		}
@@ -247,7 +250,7 @@ public class UserManager {
 			return false;
 		}
 		
-		return isAlphaNumeric(username);
+		return isGoodLetter(username);
 	}
 	
 	/**

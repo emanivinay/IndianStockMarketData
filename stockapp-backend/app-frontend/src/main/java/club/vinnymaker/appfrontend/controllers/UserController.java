@@ -123,7 +123,9 @@ public class UserController extends BaseController {
 						internal_error(resp);
 					} else {
 						// successfully created the user, return 200 with empty json.
-						success(resp, EMPTY_JSON_OBJ);
+						JSONObject body = new JSONObject();
+						body.put(ID_KEY, newUserId);
+						success(resp, body);
 					}
 				} catch (InvalidUserException e) {
 					// username/password are wrong, return a 400 response.

@@ -2,6 +2,8 @@ package club.vinnymaker.datastore;
 
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -22,6 +24,8 @@ public class UserManager {
 	public static final String USERNAME_INVALID_ERROR = "Username must be alphanumeric and at least 5 chars long";
 	public static final String PASSWORD_INVALID_ERROR = "Password must be alphanumeric and at least 8 chars long";
 	public static final String USERNAME_ALREADY_EXISTS = "Username already taken. Use another one";
+	
+	private static final Pattern USERNAME_PAT = Pattern.compile("[0-9A-Za-z_-]+");
 
 	
 	// loadUser, createUser, updateUser, deleteUser.
@@ -96,11 +100,11 @@ public class UserManager {
 			Root<User> root = query.from(User.class);
 			query.select(root).where(builder.equal(root.<String>get("username"), username));
 			List<User> users = session.createQuery(query).getResultList();
+			tx.commit();
 			if (users.size() == 0) {
 				// no user exists with the given username.
 				return null;
 			}
-			tx.commit();
 			return users.get(0);
 		} catch (HibernateException e) {
 			if (tx != null) {
@@ -194,7 +198,7 @@ public class UserManager {
 	 */
 	public Long createUser(String username, String password) throws InvalidUserException {
 		// Password is validated at this point. So just validate the username.
-		if (!isValidAlphaInput(username, USERNAME_LENGTH_MIN)) {
+		if (!isValidTextInput(username, USERNAME_LENGTH_MIN)) {
 			throw new InvalidUserException(USERNAME_INVALID_ERROR);
 		}
 		
@@ -232,25 +236,12 @@ public class UserManager {
 		return null;
 	}
 	
-	private static boolean isGoodLetter(String s) {
-		for (int i = 0;i < s.length(); i++) {
-			char c = s.charAt(i);
-			// digit, _, -, lowercase, uppercase.
-			if (!(Character.isDigit(c) || Character.isLowerCase(c) ||
-					Character.isUpperCase(c) || c == '_' || c == '-')) {
-				return false;
-			}
-		}
-		
-		return true;
-	}
-	
-	public static boolean isValidAlphaInput(String username, int minLength) {
+	public static boolean isValidTextInput(String username, int minLength) {
 		if (username == null || username.length() < minLength) {
 			return false;
 		}
 		
-		return isGoodLetter(username);
+		return USERNAME_PAT.matcher(username).matches();
 	}
 	
 	/**
@@ -260,6 +251,6 @@ public class UserManager {
 	 * @return True if the input is a valid password, false otherwise.
 	 */
 	public static boolean isValidPassword(String password) {
-		return isValidAlphaInput(password, PASSWORD_LENGTH_MIN);
+		return isValidTextInput(password, PASSWORD_LENGTH_MIN);
 	}
 }

@@ -44,7 +44,7 @@ public class RoutingServlet extends HttpServlet {
 	// All valid URIs registered in the router. 
 	static {
 		router = new TreeRouter();
-		router.add(new APIRoute("/users/:id<[0-9]+>", "GET", UserController::getUser));
+		router.add(new APIRoute("/users/:username", "GET", UserController::getUser));
 		router.add(new APIRoute("/users", "POST", UserController::createOrUpdateUser));
 	}
 	

@@ -22,8 +22,10 @@ public abstract class BaseController {
 	public static final String INTERNAL_SERVER_ERROR = "Internal server error";
 	public static final String ID_KEY = "id";
 	public static final String DELETE_KEY = "delete";
+	public static final String CREATE_KEY = "create";
 	public static final String ID_NOT_PRESENT_ERROR = "This request must have a valid id key";
 	public static final String RESOURCE_DOESNT_EXIST_ERROR = "The specified resource doesn't exist";
+	public static final String SUCCESS_KEY = "success";
 
 	
 	protected static final JSONObject EMPTY_JSON_OBJ = new JSONObject();

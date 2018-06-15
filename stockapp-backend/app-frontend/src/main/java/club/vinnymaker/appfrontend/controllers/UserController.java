@@ -43,8 +43,8 @@ public class UserController extends BaseController {
 	 * @throws IOException
 	 */
 	public static void getUser(HttpServletRequest req, HttpServletResponse resp, Map<String, String> namedParams) throws IOException {
-		long userId = Long.parseLong(namedParams.get(ID_KEY));
-		User user = UserManager.getInstance().loadUser(userId);
+		String username = namedParams.get(USERNAME_KEY);
+		User user = UserManager.getInstance().loadUser(username);
 		if (user == null) {
 			// no such user found, return 404.
 			error(resp, HttpServletResponse.SC_NOT_FOUND, USER_NOT_FOUND);
@@ -75,78 +75,82 @@ public class UserController extends BaseController {
 	 */
 	public static void createOrUpdateUser(HttpServletRequest req, HttpServletResponse resp, Map<String, String> namedParams) throws IOException {
 		boolean isDeletion = req.getParameter(DELETE_KEY) != null;
-		boolean isUserIdPresent = req.getParameter(ID_KEY) != null;
+		boolean isUserNamePresent = req.getParameter(USERNAME_KEY) != null;
+		boolean isCreation = req.getParameter(CREATE_KEY) != null;
 		
 		if (isDeletion) {
-			if (!isUserIdPresent) {
+			if (!isUserNamePresent) {
 				// delete requests should have id present. Return an invalid request error.
 				error(resp, HttpServletResponse.SC_BAD_REQUEST, ID_NOT_PRESENT_ERROR);
 			} else {
-				// User id is present.
-				Long userId = Long.parseLong(req.getParameter(ID_KEY));
-				if (UserManager.getInstance().deleteUser(userId)) {
+				// Username present.
+				String username = req.getParameter(USERNAME_KEY);
+				if (UserManager.getInstance().deleteUser(username)) {
 					// successfully deleted the user.
-					success(resp, EMPTY_JSON_OBJ);
+					JSONObject body = new JSONObject();
+					body.put(SUCCESS_KEY, "true");
+					success(resp, body);
 				} else {
 					// Failed deleting the user, most likely user doesn't exist.
 					error(resp, HttpServletResponse.SC_NOT_FOUND, RESOURCE_DOESNT_EXIST_ERROR);
 				}
 			}
-		} else {
-			if (req.getParameter(PASSWORD_KEY) == null) {
-				// Password is mandatory either for updating existing or creating new users.
-				error(resp, HttpServletResponse.SC_BAD_REQUEST, PASSWORD_NOT_PRESENT_ERROR);
+			
+			return;
+		} 
+		
+		// Both creation and updating require valid username.
+		String username = req.getParameter(USERNAME_KEY);
+		
+		
+		// Get the password and check if it's valid.
+		if (req.getParameter(PASSWORD_KEY) == null) {
+			// Password is mandatory either for updating existing or creating new users.
+			error(resp, HttpServletResponse.SC_BAD_REQUEST, PASSWORD_NOT_PRESENT_ERROR);
+			return;
+		}
+		
+		// Validate the new password first.
+		String password = req.getParameter(PASSWORD_KEY);
+		if (!UserManager.isValidPassword(password)) {
+			error(resp, HttpServletResponse.SC_BAD_REQUEST, PASSWORD_INVALID_ERROR);
+			return;
+		}
+		
+		if (isCreation) {
+			// New user creation.
+			Long userId = null;
+			try {
+				userId = UserManager.getInstance().createUser(username, password);
+			} catch (InvalidUserException e) {
+				error(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
 				return;
 			}
 			
-			// Validate the new password first.
-			String password = req.getParameter(PASSWORD_KEY);
-			if (!UserManager.isValidPassword(password)) {
-				error(resp, HttpServletResponse.SC_BAD_REQUEST, PASSWORD_INVALID_ERROR);
-				return;
-			}
-			
-			if (!isUserIdPresent) {
-				// New user creation. Must have a valid username.
-				boolean isUsernamePresent = req.getParameter(USERNAME_KEY) != null;
-				if (!isUsernamePresent) {
-					error(resp, HttpServletResponse.SC_BAD_REQUEST, USERNAME_NOT_PRESENT_ERROR);
-					return;
-				}
-				
-				String username = req.getParameter(USERNAME_KEY);
-				Long newUserId = null;
-				try {
-					newUserId = UserManager.getInstance().createUser(username, password);
-					if (newUserId == null) {
-						// error creating user. return an internal server error.
-						internal_error(resp);
-					} else {
-						// successfully created the user, return 200 with empty json.
-						JSONObject body = new JSONObject();
-						body.put(ID_KEY, newUserId);
-						success(resp, body);
-					}
-				} catch (InvalidUserException e) {
-					// username/password are wrong, return a 400 response.
-					error(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-				}
-				
+			if (userId == null) {
+				// failed creating a new user. Return an internal error.
+				internal_error(resp);
 			} else {
-				Long userId = Long.parseLong(req.getParameter(ID_KEY));
-				// Update existing user. Currently, only passwords can be updated.
-				User user = UserManager.getInstance().loadUser(userId);
-				try {
-					if (UserManager.getInstance().updateUser(user, password)) {
-						// successfully updated the user.
-						success(resp, EMPTY_JSON_OBJ);
-					} else {
-						// failed updating the user.
-						internal_error(resp);
-					}
-				} catch (InvalidUserException e) {
-					error(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-				}
+				// successfully created a new user. Return success status.
+				JSONObject body = new JSONObject();
+				body.put(SUCCESS_KEY, "true");
+				success(resp, body);
+			}
+		} else {
+			// Try updating an existing user.
+			User user = UserManager.getInstance().loadUser(username);
+			if (user == null) {
+				// No such existing user, return 404.
+				error(resp, HttpServletResponse.SC_NOT_FOUND, USER_NOT_FOUND);
+				return;
+			}
+			
+			if (UserManager.getInstance().updateUser(user, password)) {
+				JSONObject body = new JSONObject();
+				body.put(SUCCESS_KEY, "true");
+				success(resp, body);
+			} else {
+				internal_error(resp);
 			}
 		}
 	}

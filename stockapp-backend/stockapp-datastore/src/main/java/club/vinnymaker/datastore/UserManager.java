@@ -2,7 +2,6 @@ package club.vinnymaker.datastore;
 
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -88,9 +87,14 @@ public class UserManager {
 	 * 
 	 * @param username Username of the user to load.
 	 * 
-	 * @return User object if successful, null otherwise.
+	 * @return User object if a exists with the username or null otherwise.
 	 */
 	public User loadUser(String username) {
+		if (!isValidTextInput(username, USERNAME_LENGTH_MIN)) {
+			// Not a valid username, so user cannot exist.
+			return null;
+		}
+		
 		Session session = DataStoreManager.getInstance().getFactory().openSession();
 		Transaction tx = null;
 		try {
@@ -127,7 +131,7 @@ public class UserManager {
 	 * @return True if successfully updated, false otherwise.
 	 * @throws InvalidUserException when the user details are not valid.
 	 */
-	public boolean updateUser(User user, String newPassword) throws InvalidUserException {
+	public boolean updateUser(User user, String newPassword) {
 		// Update password hash + salt in the user object.
 		String newSalt = createRandomSalt();
 		String newHash = getPasswordHash(newPassword, newSalt);
@@ -157,11 +161,11 @@ public class UserManager {
 	/**
 	 * Deletes a user from the database with the given user id.
 	 * 
-	 * @param userId Id of the user to be deleted.
+	 * @param username Username of the user to be deleted.
 	 * @return True if user successfully deleted and false otherwise(usually means no such user existed).
 	 */
-	public boolean deleteUser(Long userId) {
-		User user = loadUser(userId);
+	public boolean deleteUser(String username) {
+		User user = loadUser(username);
 		if (user == null) {
 			return false;
 		}
@@ -236,6 +240,14 @@ public class UserManager {
 		return null;
 	}
 	
+	/**
+	 * Checks whether the given username is valid. Valid user names are composed of english
+	 * letters, digits, hyphen and underscore and are of at least 5 letters long.
+	 * 
+	 * @param username Username to check.
+	 * @param minLength Minimum length of a username.
+	 * @return
+	 */
 	public static boolean isValidTextInput(String username, int minLength) {
 		if (username == null || username.length() < minLength) {
 			return false;

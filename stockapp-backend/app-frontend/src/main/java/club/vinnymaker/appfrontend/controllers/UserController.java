@@ -23,7 +23,6 @@ public class UserController extends BaseController {
 	private static final String PASSWORD_KEY = "password";
 	private static final String PASSWORD_NOT_PRESENT_ERROR = "'password' key is required";
 	private static final String USERNAME_KEY = "username";
-	private static final String USERNAME_NOT_PRESENT_ERROR = "'username' key is required";
 	private static final String USER_NOT_FOUND = "No such user found";
 	
 	private static final DateFormat USER_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy KK:mm:ss a Z");
@@ -44,6 +43,12 @@ public class UserController extends BaseController {
 	 */
 	public static void getUser(HttpServletRequest req, HttpServletResponse resp, Map<String, String> namedParams) throws IOException {
 		String username = namedParams.get(USERNAME_KEY);
+		if (!authenticate(req, username)) {
+			// send 401.
+			authFailure(resp);
+			return;
+		}
+		
 		User user = UserManager.getInstance().loadUser(username);
 		if (user == null) {
 			// no such user found, return 404.
@@ -85,6 +90,13 @@ public class UserController extends BaseController {
 			} else {
 				// Username present.
 				String username = req.getParameter(USERNAME_KEY);
+				
+				// authenticate first.
+				if (!authenticate(req, username)) {
+					authFailure(resp);
+					return;
+				}
+				
 				if (UserManager.getInstance().deleteUser(username)) {
 					// successfully deleted the user.
 					JSONObject body = new JSONObject();
@@ -119,6 +131,7 @@ public class UserController extends BaseController {
 		
 		if (isCreation) {
 			// New user creation.
+			// TODO(vinay) -> User creation must validate a secret key first. 
 			Long userId = null;
 			try {
 				userId = UserManager.getInstance().createUser(username, password);
@@ -137,7 +150,12 @@ public class UserController extends BaseController {
 				success(resp, body);
 			}
 		} else {
-			// Try updating an existing user.
+			// Try updating an existing user, after authenticating first.
+			if (!authenticate(req, username)) {
+				authFailure(resp);
+				return;
+			}
+			
 			User user = UserManager.getInstance().loadUser(username);
 			if (user == null) {
 				// No such existing user, return 404.

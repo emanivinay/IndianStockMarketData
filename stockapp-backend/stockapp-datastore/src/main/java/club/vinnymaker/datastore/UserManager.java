@@ -52,6 +52,23 @@ public class UserManager {
 	}
 	
 	/**
+	 * Verify a given user's password.
+	 * 
+	 * @param username Username whose password should be verified.
+	 * @param password Candidate password.
+	 * @return True if correct password, false otherwise.
+	 */
+	public boolean verifyUserPassword(String username, String password) {
+		User user = loadUser(username);
+		if (user == null) {
+			return false;
+		}
+		
+		String hash = user.getPasswordHash();
+		return verifyPassword(password, hash);
+	}
+	
+	/**
 	 * Load a user from database by user id. If such a user is already persistent, it's returned
 	 * automatically. If no user exists with the id, null is returned.
 	 *  

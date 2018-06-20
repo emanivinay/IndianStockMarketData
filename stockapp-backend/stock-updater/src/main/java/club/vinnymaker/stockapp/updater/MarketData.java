@@ -1,5 +1,7 @@
 package club.vinnymaker.stockapp.updater;
 
+import java.util.Date;
+
 import lombok.Getter;
 
 /**
@@ -10,7 +12,7 @@ import lombok.Getter;
  *
  */
 @Getter
-public abstract class MarketData {
+public class MarketData {
 	// Symbol of this item.
 	private final String symbol;
 	
@@ -23,15 +25,23 @@ public abstract class MarketData {
 	// Latest traded price.
 	private double lastTradedPrice;
 	
-	// Change from previous closing price in absolute.
-	private double change;
+	// Previous closing price.
+	private double previousClose;
+	
+	// Type of the item - stock or index.
+	private MarketDataType type;
+	
+	// Time of the latest update for this item.
+	private Date lastUpdatedAt;
 	
 	protected MarketData(String sym) {
 		symbol = sym;
 	}
 	
 	/**
-	 * @return Type of this item - stock or index etc...
+	 * @return Change in value from previous day's close.
 	 */
-	abstract public MarketDataType getType();
+	public double getChange() {
+		return lastTradedPrice - previousClose;
+	}
 }

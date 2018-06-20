@@ -6,3 +6,7 @@ psql -U postgres -v dbname=$DBNAME  -f db_create.sql
 
 # Now create database tables
 psql -U postgres -d $DBNAME -f schema_create.sql; 
+
+# Populate initial data in tables.
+psql -U postgres -d $DBNAME -f data.sql;
+

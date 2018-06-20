@@ -1,13 +1,11 @@
 package club.vinnymaker.stockapp.updater;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-
-import lombok.Getter;
 
 /**
- * NSEDataIndexer maintains the data for NSE.
+ * NSEDataIndexer maintains the data for NSE. For this indexer, we rely on the live watch page published 
+ * by NSE. 
  * 
  * @author evinay
  *
@@ -30,7 +28,7 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 		return Exchange.getExchange(NSE);
 	}
 	
-	public NSEDataIndexer getInstance() {
+	public static NSEDataIndexer getInstance() {
 		if (instance == null) {
 			instance = new NSEDataIndexer();
 		}
@@ -55,6 +53,12 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 	
 	private List<MarketData> readItemsFromIndexPage(String suffix) {
 		// TODO(vinay) -> Implement this.
+		String url = NSE_LIVE_DATA_URL_PREFIX + suffix;
 		return null;
+	}
+	
+	@Override
+	public void syncToDataStore(Collection<MarketData> items) {
+		// TODO(vinay) -> Implement this.
 	}
 }

@@ -1,5 +1,6 @@
 package club.vinnymaker.stockapp.updater;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -17,7 +18,16 @@ public interface IExchangeDataIndexer {
 	public Exchange getExchange();
 	
 	/**
-	 * The list of indices/stocks maintained by this indexer. 
+	 * Updates the list of stocks maintained by this indexer.
+	 * 
+	 * @return Updated list of the stocks.
 	 */
 	List<MarketData> getMarketDataItems();
+	
+	/**
+	 * Synchronizes the recently fetched stock data to the data store.
+	 * 
+	 * @param items Recently fetched stock data.
+	 */
+	public void syncToDataStore(Collection<MarketData> items);
 }

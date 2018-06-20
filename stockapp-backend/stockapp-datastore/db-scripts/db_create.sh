@@ -1,6 +1,8 @@
 # This script needs to be run as `postgres` user. All tables and schemas
 # created will be owned by `postgres`.
 
+[[ -z $DBNAME ]] && echo "DBNAME variable not set, exiting" && exit;
+
 # First create the role and database.
 psql -U postgres -v dbname=$DBNAME  -f db_create.sql
 

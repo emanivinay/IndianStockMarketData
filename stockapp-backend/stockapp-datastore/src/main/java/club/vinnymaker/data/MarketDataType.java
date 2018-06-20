@@ -1,4 +1,4 @@
-package club.vinnymaker.stockapp.updater;
+package club.vinnymaker.data;
 
 /**
  * Type of market data item - stock, index etc...

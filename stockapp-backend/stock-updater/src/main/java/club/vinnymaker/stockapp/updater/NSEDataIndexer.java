@@ -1,7 +1,10 @@
 package club.vinnymaker.stockapp.updater;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import club.vinnymaker.data.MarketData;
 
 /**
  * NSEDataIndexer maintains the data for NSE. For this indexer, we rely on the live watch page published 
@@ -54,7 +57,7 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 	private List<MarketData> readItemsFromIndexPage(String suffix) {
 		// TODO(vinay) -> Implement this.
 		String url = NSE_LIVE_DATA_URL_PREFIX + suffix;
-		return null;
+		return new ArrayList<>();
 	}
 	
 	@Override

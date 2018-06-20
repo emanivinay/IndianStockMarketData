@@ -3,6 +3,8 @@ package club.vinnymaker.stockapp.updater;
 import java.util.Collection;
 import java.util.List;
 
+import club.vinnymaker.data.MarketData;
+
 /**
  * An IExchangeDataIndexer object indexes and maintains data of a single stock exchange.
  * 

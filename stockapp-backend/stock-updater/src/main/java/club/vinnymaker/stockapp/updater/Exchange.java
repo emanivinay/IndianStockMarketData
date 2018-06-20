@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import club.vinnymaker.data.MarketData;
 import lombok.Getter;
 
 /**

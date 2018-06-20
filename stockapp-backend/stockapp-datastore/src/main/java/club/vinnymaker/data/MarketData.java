@@ -1,4 +1,4 @@
-package club.vinnymaker.stockapp.updater;
+package club.vinnymaker.data;
 
 import java.util.Date;
 

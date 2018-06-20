@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import static club.vinnymaker.stockapp.updater.Exchange.REFRESH_THRESHOLD_MS;
 
 /**
@@ -71,7 +72,6 @@ public class Updater {
 				}
 				
 				// Wait a minute before refreshing data.
-				System.out.println("Waiting a minute before trying to refresh data");
 				Thread.sleep(REFRESH_THRESHOLD_MS);
 				
 				for (Exchange ex : exchanges) {

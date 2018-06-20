@@ -4,8 +4,11 @@
 # First create the role and database.
 psql -U postgres -v dbname=$DBNAME  -f db_create.sql
 
-# Now create database tables
-psql -U postgres -d $DBNAME -f schema_create.sql; 
+# Now create user data tables
+psql -U postgres -d $DBNAME -f users.sql; 
+
+# Now create stock data tables
+psql -U postgres -d $DBNAME -f stocks.sql;
 
 # Populate initial data in tables.
 psql -U postgres -d $DBNAME -f data.sql;

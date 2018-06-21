@@ -15,6 +15,12 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import club.vinnymaker.data.User;
 
+/**
+ * CRUD layer for {@link User} objects in the database.   
+ * 
+ * @author evinay
+ *
+ */
 public class UserManager {
 	
 	public static final int USERNAME_LENGTH_MIN = 5;

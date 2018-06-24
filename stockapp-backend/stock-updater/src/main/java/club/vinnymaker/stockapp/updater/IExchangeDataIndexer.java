@@ -3,6 +3,7 @@ package club.vinnymaker.stockapp.updater;
 import java.util.Collection;
 import java.util.List;
 
+import club.vinnymaker.data.Exchange;
 import club.vinnymaker.data.MarketData;
 
 /**
@@ -29,7 +30,8 @@ public interface IExchangeDataIndexer {
 	/**
 	 * Synchronizes the recently fetched stock data to the data store.
 	 * 
+	 * @param exchangeCode Code for this exchange.
 	 * @param items Recently fetched stock data.
 	 */
-	public void syncToDataStore(Collection<MarketData> items);
+	public void syncToDataStore(String exchangeCode, Collection<MarketData> items);
 }

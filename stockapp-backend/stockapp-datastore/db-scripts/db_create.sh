@@ -14,4 +14,3 @@ psql -U postgres -d $DBNAME -f stocks.sql;
 
 # Populate initial data in tables.
 psql -U postgres -d $DBNAME -f data.sql;
-

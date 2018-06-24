@@ -11,8 +11,10 @@ import org.apache.http.client.fluent.Request;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import club.vinnymaker.data.Exchange;
 import club.vinnymaker.data.MarketData;
 import club.vinnymaker.data.MarketDataType;
+import club.vinnymaker.datastore.StockDataManager;
 
 /**
  * NSEDataIndexer maintains the data for NSE. For this indexer, we rely on the live watch page published 
@@ -49,7 +51,8 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 	
 	@Override
 	public Exchange getExchange() {
-		return Exchange.getExchange(NSE);
+		// TODO(vinay) -> Implement this.
+		return null;
 	}
 	
 	public static NSEDataIndexer getInstance() {
@@ -60,17 +63,12 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 		return instance;
 	}
 	
-	// List of indices/stocks maintained by this indexer.
-	private List<MarketData> marketItems = null;
-	
 	@Override
 	public List<MarketData> getMarketDataItems() {
 		List<MarketData> items = readItemsFromIndexPage(NSE50_SUFFIX);
 		items.addAll(readItemsFromIndexPage(NXT50_SUFFIX));
 		items.addAll(readItemsFromIndexPage(MIDCAP_SUFFIX));
-		marketItems = items;
-		
-		return marketItems;
+		return items;
 	}
 	
 	private List<MarketData> readItemsFromIndexPage(String suffix) {
@@ -104,12 +102,15 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 		return items;
 	}
 
+	/**
+	 * Updates the recently fetched stock values to database.
+	 * 
+	 * @param exchangeCode Code for this {@link Exchange}.
+	 * @param items Stocks whose values are to be updated in db. 
+	 */
 	@Override
-	public void syncToDataStore(Collection<MarketData> items) {
-		// TODO(vinay) -> Implement this. For now, just print these items to stdout.
-		for (MarketData item : items) {
-			System.out.println(item.getType());
-		}
+	public void syncToDataStore(String exchangeCode, Collection<MarketData> items) {
+		StockDataManager.getInstance().updateIndexStocks(exchangeCode, items);
 	}
 
 	private double parseDouble(String number) {
@@ -118,7 +119,6 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 	}
 
 	private MarketData getMarketDataFromJson(JSONObject obj, Date now) {
-		// TODO(vinay) -> Implement this.
 		MarketData item = new MarketData((String) obj.get(SYMBOL_KEY));
 		item.setType(MarketDataType.STOCK);
 		item.setOpen(parseDouble((String) obj.get(OPEN_KEY)));

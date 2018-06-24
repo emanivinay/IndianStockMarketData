@@ -13,5 +13,7 @@
 		
 		<!-- Resource mappings start here -->
         <mapping class="club.vinnymaker.data.User" />
+        <mapping class="club.vinnymaker.data.MarketData" />
+        <mapping class="club.vinnymaker.data.Exchange" />
 	</session-factory>
 </hibernate-configuration>

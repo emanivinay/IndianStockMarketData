@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration strict="true" status="warn">
+	<Properties>
+		<!-- Should change this to appropriate value when deploying the app. -->
+		<Property name="logfile.path">/Users/evinay/programming/app-projects/logs/stockapp/updater.log</Property>
+	</Properties>
+	
+	<Appenders>
+		<Appender type="File" name="File" fileName="${logfile.path}">
+			<Layout type="PatternLayout">
+				<Pattern>%d{HH:mm:ss.SSS} [%t] %p %logger - %m%n</Pattern>
+			</Layout>
+		</Appender>
+	</Appenders>
+	
+	<Loggers>
+		<!--  We only log at debug, info and error levels. -->
+		<Root level="debug">
+			<AppenderRef ref="File" />
+		</Root>
+		
+		<!--  Restrict hibernate logging to info level. -->
+		<Logger name="org.hibernate" level="info">
+		</Logger>
+	</Loggers>
+</Configuration>

@@ -25,7 +25,6 @@ import club.vinnymaker.datastore.StockDataManager;
  */
 public class NSEDataIndexer implements IExchangeDataIndexer {
 	
-	private static final String NSE = "NSE";
 	private static final String NSE_LIVE_DATA_URL_PREFIX = "https://www.nseindia.com/live_market/dynaContent/live_watch/stock_watch/";
 	private static final String NSE50_SUFFIX = "niftyStockWatch.json";
 	private static final String NXT50_SUFFIX = "juniorNiftyStockWatch.json";
@@ -71,6 +70,13 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 		return items;
 	}
 	
+	/**
+	 * Fetches up to date data for stocks of the given index.
+	 *  
+	 * @param suffix Index part of the NSE live watch page json data url.
+	 *   
+	 * @return List of MarketData objects with up to date data.
+	 */
 	private List<MarketData> readItemsFromIndexPage(String suffix) {
 		String url = NSE_LIVE_DATA_URL_PREFIX + suffix;
 		Date now = new Date();
@@ -81,20 +87,11 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 
 			// First, get the index item itself.
 			JSONObject latestIndexData = (JSONObject) (((JSONArray)obj.get(LATEST_DATA_KEY)).get(0));
-			MarketData data = new MarketData((String) latestIndexData.get(INDEX_NAME_KEY));
-			data.setType(MarketDataType.INDEX);
-			data.setOpen(parseDouble((String) latestIndexData.get(OPEN_KEY)));
-			data.setLastTradedPrice(parseDouble((String) latestIndexData.get(INDEX_LTP_KEY)));
-			data.setPreviousClose(data.getLastTradedPrice() - parseDouble((String) latestIndexData.get(INDEX_CHG_KEY)));
-			data.setVolume(parseDouble((String) obj.get(INDEX_VOL_KEY)));
-			data.setLastUpdatedAt(now);
-			data.setHigh(parseDouble((String) latestIndexData.get(HIGH_KEY)));
-			data.setLow(parseDouble((String) latestIndexData.get(LOW_KEY)));
-			items.add(data);
+			items.add(getMarketDataFromJson(latestIndexData, now, true));
 
 			// Next, get all the component stocks.
 			for (Object elem : (JSONArray) obj.get(DATA_KEY) ) {
-				items.add(getMarketDataFromJson((JSONObject) elem, now));
+				items.add(getMarketDataFromJson((JSONObject) elem, now, false));
 			}
 		} catch (IOException e) {
 			// TODO(vinay) -> Error while retrieving response. Should be logged.
@@ -118,15 +115,24 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 		return Double.valueOf(n);
 	}
 
-	private MarketData getMarketDataFromJson(JSONObject obj, Date now) {
-		MarketData item = new MarketData((String) obj.get(SYMBOL_KEY));
-		item.setType(MarketDataType.STOCK);
+	/**
+	 * Constructs a {@link MarketData} object with the given json data.
+	 * 
+	 * @param obj The json object with the data.
+	 * @param now The approx time when this data was fetched.
+	 * @param isIndex Whether this in an index.
+	 * 
+	 * @return MarketData object filled with the given data.
+	 */
+	private MarketData getMarketDataFromJson(JSONObject obj, Date now, boolean isIndex) {
+		MarketData item = new MarketData((String) obj.get(isIndex ? INDEX_NAME_KEY : SYMBOL_KEY));
+		item.setType(isIndex ? MarketDataType.INDEX : MarketDataType.STOCK);
 		item.setOpen(parseDouble((String) obj.get(OPEN_KEY)));
-		item.setLastTradedPrice(parseDouble((String) obj.get(STOCK_LTP_KEY)));
-		item.setVolume(parseDouble((String) obj.get(STOCK_VOL_KEY)));
+		item.setLastTradedPrice(parseDouble((String) obj.get(isIndex ? INDEX_LTP_KEY : STOCK_LTP_KEY)));
+		item.setVolume(parseDouble((String) obj.get(isIndex ? INDEX_VOL_KEY : STOCK_VOL_KEY)));
 		item.setHigh(parseDouble((String) obj.get(HIGH_KEY)));
 		item.setLow(parseDouble((String) obj.get(LOW_KEY)));
-		item.setPreviousClose(item.getLastTradedPrice() - parseDouble((String) obj.get(STOCK_CHG_KEY)));
+		item.setPreviousClose(item.getLastTradedPrice() - parseDouble((String) obj.get(isIndex ? INDEX_CHG_KEY : STOCK_CHG_KEY)));
 		item.setLastUpdatedAt(now);
 		return item;
 	}

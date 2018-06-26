@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Transient;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +28,7 @@ public class MarketData {
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="stock_id_gen")
 	@SequenceGenerator(name = "stock_id_gen", sequenceName = "stocks_stock_id_seq", allocationSize = 1)
 	@Column(name = "stock_id")
-	private long id;
+	private int id;
 	
 	// Symbol of this item.
 	@Column(name = "symbol")
@@ -58,14 +59,16 @@ public class MarketData {
 	private double low;
 	
 	// Type of the item - stock or index.
+	@Transient
 	private MarketDataType type;
 	
 	// Time of the latest update for this item.
+	@Column(name = "last_update_time")
 	private Date lastUpdatedAt;
 	
 	// Id of the exchange this item belongs to.
 	@Column(name = "exchange_id")
-	private long exchangeId;
+	private int exchangeId;
 	
 	public MarketData(String sym) {
 		symbol = sym;

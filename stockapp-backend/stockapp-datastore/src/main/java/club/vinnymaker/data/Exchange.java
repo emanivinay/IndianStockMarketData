@@ -22,7 +22,7 @@ public class Exchange {
 	@SequenceGenerator(name = "exchange_id_gen", allocationSize = 1, sequenceName = "exchanges_exchange_id_seq")
 	@Id
 	@Column(name = "exchange_id")
-	private long id;
+	private int id;
 	
 	// Code for this exchange. NSE, BSE etc...
 	@Column(name = "code")

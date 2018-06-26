@@ -12,12 +12,14 @@ CREATE TABLE stocks (stock_id serial primary key,
 					 ltp real default -1.0,
 					 high real default -1.0,
 					 low real default -1.0,
-					 prev_close real default -1.0);
+					 prev_close real default -1.0,
+                     last_update_time timestamp without time zone not null,
+                     UNIQUE (exchange_id, symbol));
 
 -- Create the stock index table, This is to be maintained manually.
 CREATE TABLE stock_indexes (stock_index_id serial primary key,
                           exchange_id integer references exchanges(exchange_id),
-                          index_name varchar(128) not null);
+                          index_name varchar(128) references stocks(symbol));
 
 -- Create the index-stock listing table which stores the list of constituent
 -- stocks for each index.

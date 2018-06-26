@@ -8,7 +8,7 @@
 	<Appenders>
 		<Appender type="File" name="File" fileName="${logfile.path}">
 			<Layout type="PatternLayout">
-				<Pattern>%d{HH:mm:ss.SSS} [%t] %p %logger - %m%n</Pattern>
+				<Pattern>%d [%t] %p %logger - %m%n</Pattern>
 			</Layout>
 		</Appender>
 	</Appenders>
@@ -20,7 +20,7 @@
 		</Root>
 		
 		<!--  Restrict hibernate logging to info level. -->
-		<Logger name="org.hibernate" level="info">
+		<Logger name="org.hibernate" level="debug">
 		</Logger>
 	</Loggers>
 </Configuration>

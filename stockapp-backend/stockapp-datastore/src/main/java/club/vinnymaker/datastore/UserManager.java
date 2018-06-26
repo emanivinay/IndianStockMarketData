@@ -8,6 +8,8 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -32,6 +34,7 @@ public class UserManager {
 	
 	private static final Pattern USERNAME_PAT = Pattern.compile("[0-9A-Za-z_-]+");
 
+	private static final Logger logger = LogManager.getLogger(UserManager.class);
 	
 	// loadUser, createUser, updateUser, deleteUser.
 	private static UserManager userMgr = null;
@@ -169,7 +172,9 @@ public class UserManager {
 			tx.commit();
 			return true;
 		} catch (HibernateException e) {
-			// TODO(vinay) -> Error occurred while updating a user, this must be logged.
+			logger.error("Error while updating a user named " + user.getUsername());
+			logger.error("Cause is " + e.getMessage());
+			
 			if (tx != null) {
 				tx.rollback();
 			}
@@ -201,7 +206,9 @@ public class UserManager {
 			tx.commit();
 			return true;
 		} catch (HibernateException e) {
-			// TODO(vinay) -> Error deleting the user, must be logged.
+			logger.error("Error deleting the user with username " + username);
+			logger.error("Cause is " + e.getMessage());
+			
 			if (tx != null) {
 				tx.rollback();
 			}
@@ -250,8 +257,9 @@ public class UserManager {
 			tx.commit();
 			return id;
 		} catch (HibernateException e) {
-			// TODO(vinay) -> Error occurred during the transaction, it must be logged.
-			e.printStackTrace();
+			logger.error("Error creating a new user named " + username);
+			logger.error("Cause is " + e.getMessage());
+			
 			if (tx != null) {
 				tx.rollback();
 			}

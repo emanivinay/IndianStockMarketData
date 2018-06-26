@@ -12,11 +12,11 @@ import lombok.Getter;
 @Getter
 public class MarketDataLite {
 	
-	private final long exchangeId;
+	private final int exchangeId;
 	private final String fullName;
 	private final MarketDataType type;
 	
-	public MarketDataLite(long exId, String fullName, MarketDataType type) {
+	public MarketDataLite(int exId, String fullName, MarketDataType type) {
 		this.exchangeId = exId;
 		this.fullName = fullName;
 		this.type = type;

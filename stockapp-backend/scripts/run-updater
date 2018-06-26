@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd stockapp-datastore
+mvn clean install
+
+cd ../stock-updater
+mvn clean compile assembly:single
+java -jar target/stock-updater-1.0-SNAPSHOT-jar-with-dependencies.jar

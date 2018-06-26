@@ -2,12 +2,17 @@ package club.vinnymaker.stockapp.updater;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -24,6 +29,8 @@ import club.vinnymaker.datastore.StockDataManager;
  *
  */
 public class NSEDataIndexer implements IExchangeDataIndexer {
+	
+	private static final String EXCHANGE_CODE_NSE = "NSE";
 	
 	private static final String NSE_LIVE_DATA_URL_PREFIX = "https://www.nseindia.com/live_market/dynaContent/live_watch/stock_watch/";
 	private static final String NSE50_SUFFIX = "niftyStockWatch.json";
@@ -45,13 +52,14 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 	
 	private static NSEDataIndexer instance = null;
 	
+	private static final Logger logger = LogManager.getLogger(NSEDataIndexer.class); 
+	
 	private NSEDataIndexer() {
 	}
 	
 	@Override
 	public Exchange getExchange() {
-		// TODO(vinay) -> Implement this.
-		return null;
+		return StockDataManager.getInstance().getExchange(EXCHANGE_CODE_NSE);
 	}
 	
 	public static NSEDataIndexer getInstance() {
@@ -62,12 +70,32 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 		return instance;
 	}
 	
+	/**
+	 *  Names of indexes maintained by this indexer. These should match the names stored in db as well as
+	 *  the names from the data source. 
+	 */
+	private static final String INDEX_NSE50 = "NIFTY 50";
+	private static final String INDEX_NXT50 = "NIFTY NEXT 50";
+	private static final String INDEX_MIDCAP = "NIFTY MIDCAP 50";
+	private static final String[] INDEXES_LIST = new String[] {INDEX_NSE50, INDEX_NXT50, INDEX_MIDCAP};
+	
+	private static final Map<String, String> INDEX_NAME_SUFFIX_MAP = new HashMap<>();
+	
+	static {
+		INDEX_NAME_SUFFIX_MAP.put(INDEX_NSE50, NSE50_SUFFIX);
+		INDEX_NAME_SUFFIX_MAP.put(INDEX_NXT50, NXT50_SUFFIX);
+		INDEX_NAME_SUFFIX_MAP.put(INDEX_MIDCAP, MIDCAP_SUFFIX);
+	}
+	
 	@Override
-	public List<MarketData> getMarketDataItems() {
-		List<MarketData> items = readItemsFromIndexPage(NSE50_SUFFIX);
-		items.addAll(readItemsFromIndexPage(NXT50_SUFFIX));
-		items.addAll(readItemsFromIndexPage(MIDCAP_SUFFIX));
-		return items;
+	public List<String> getExchangeIndexes() {
+		return Arrays.asList(INDEXES_LIST);
+	}
+	
+	@Override
+	public List<MarketData> getMarketDataItems(String index) {
+		String suffix = INDEX_NAME_SUFFIX_MAP.get(index);
+		return readItemsFromIndexPage(suffix);
 	}
 	
 	/**
@@ -87,6 +115,8 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 
 			// First, get the index item itself.
 			JSONObject latestIndexData = (JSONObject) (((JSONArray)obj.get(LATEST_DATA_KEY)).get(0));
+			// Insert into latestIndexData a few keys that're present in the outer object.
+			latestIndexData.put(INDEX_VOL_KEY, obj.get(INDEX_VOL_KEY));
 			items.add(getMarketDataFromJson(latestIndexData, now, true));
 
 			// Next, get all the component stocks.
@@ -94,17 +124,11 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 				items.add(getMarketDataFromJson((JSONObject) elem, now, false));
 			}
 		} catch (IOException e) {
-			// TODO(vinay) -> Error while retrieving response. Should be logged.
+			logger.debug("Error retrieving items from data source " + e.getMessage());
 		}
 		return items;
 	}
 
-	/**
-	 * Updates the recently fetched stock values to database.
-	 * 
-	 * @param exchangeCode Code for this {@link Exchange}.
-	 * @param items Stocks whose values are to be updated in db. 
-	 */
 	@Override
 	public void syncToDataStore(String exchangeCode, Collection<MarketData> items) {
 		StockDataManager.getInstance().updateIndexStocks(exchangeCode, items);
@@ -134,6 +158,7 @@ public class NSEDataIndexer implements IExchangeDataIndexer {
 		item.setLow(parseDouble((String) obj.get(LOW_KEY)));
 		item.setPreviousClose(item.getLastTradedPrice() - parseDouble((String) obj.get(isIndex ? INDEX_CHG_KEY : STOCK_CHG_KEY)));
 		item.setLastUpdatedAt(now);
+		item.setExchangeId(getExchange().getId());
 		return item;
 	}
 }

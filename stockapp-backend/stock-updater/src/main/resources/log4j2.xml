@@ -18,9 +18,5 @@
 		<Root level="debug">
 			<AppenderRef ref="File" />
 		</Root>
-		
-		<!--  Restrict hibernate logging to info level. -->
-		<Logger name="org.hibernate" level="debug">
-		</Logger>
 	</Loggers>
 </Configuration>

@@ -259,18 +259,51 @@ public class StockDataManager {
 	}
 	
 	// APIs for client requests.
-	/**
-	 * Given an index, retrieves data all its constituent stocks 
-	 * @param indexName
-	 * @return
-	 */
-	public Collection<MarketData> getAllMembersData(String indexName) {
-		// TODO(vinay) -> Implement this.
-		return null;
-	}
+	private static final String GET_INDEX_ID_QRY_PAT = "SELECT stock_index_id FROM stock_indexes WHERE index_name = '%s' AND exchange_id = %d";
+	private static final String GET_INDEX_STOCK_IDS_QRY_PAT = "SELECT stock_id FROM index_listings WHERE index_id = %d";
 	
-	public Collection<MarketData> getStockData(String symbol) {
-		// TODO(vinay) -> Implement this.
+	/**
+	 * Retrieves data of the constituent stocks on an index.
+	 *  
+	 * @param exCode Exchange code.
+	 * @param indexName Name of the index.
+	 * 
+	 * @return The given index's constituent stock data.(including the index itself)
+	 */
+	@SuppressWarnings("rawtypes")
+	public Collection<MarketData> getAllMembersData(String exCode, String indexName) {
+		Session session = DataStoreManager.getInstance().getFactory().openSession();
+		Exchange ex = getExchange(exCode, session);
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			// SELECT stock_index_id FROM stock_indexes WHERE index_name = indexName AND exchange_id = exId;
+			List idList = session.createNativeQuery(String.format(GET_INDEX_ID_QRY_PAT, indexName, ex.getId())).list();
+			if (idList.size() != 1) {
+				// Can't have more than 1 index with the same name.
+				tx.commit();
+				return new ArrayList<>();
+			}
+			
+			int indexId = (Integer) idList.get(0);
+			// SELECT stock_id FROM index_listings WHERE index_id = indexId;
+			List stockIdList = session.createNativeQuery(String.format(GET_INDEX_STOCK_IDS_QRY_PAT, indexId)).list();
+			
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<MarketData> critQry = builder.createQuery(MarketData.class);
+			Root<MarketData> root = critQry.from(MarketData.class);
+			critQry.select(root).where(root.<Integer>get("id").in(stockIdList));
+			List<MarketData> ret = session.createQuery(critQry).list();
+			tx.commit();
+			return ret;
+		} catch (HibernateException e) {
+			logger.info("Error retrieving index item with the name " + indexName + " on exchange " + exCode);
+			if (tx != null) {
+				tx.rollback();
+			}
+		} finally {
+			session.close();
+		}
 		return null;
 	}
 	

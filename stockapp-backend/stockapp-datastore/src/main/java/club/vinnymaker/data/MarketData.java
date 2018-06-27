@@ -93,4 +93,19 @@ public class MarketData {
 		// Stock(open=o, ltp=l, vol=vol, high=h, low=lo, prevClose=prev, last=last);
 		return String.format(REPR_PAT, type.toString(), open, lastTradedPrice, volume, high, low, previousClose, lastUpdatedAt);
 	}
+	
+	/**
+	 * Updates an item with outdated data with this object's more recent data.
+	 * 
+	 * @param other {@link MarketData} item whose data is to be updated. 
+	 */
+	public void update(MarketData other) {
+		other.setLastUpdatedAt(lastUpdatedAt);
+		other.setHigh(high);
+		other.setLow(low);
+		other.setLastTradedPrice(lastTradedPrice);
+		other.setOpen(open);
+		other.setPreviousClose(previousClose);
+		other.setVolume(volume);
+	}
 }

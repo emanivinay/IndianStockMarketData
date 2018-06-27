@@ -18,7 +18,7 @@ import org.json.JSONObject;
 
 import club.vinnymaker.appfrontend.controllers.UserController;
 import club.vinnymaker.appfrontend.controllers.IController;
-
+import club.vinnymaker.appfrontend.controllers.StockController;
 import lombok.Getter;
 
 public class RoutingServlet extends HttpServlet {
@@ -41,11 +41,17 @@ public class RoutingServlet extends HttpServlet {
 		}
 	}
 	
-	// All valid URIs registered in the router. 
+	// All valid URIs are registered here in the router. 
 	static {
 		router = new TreeRouter();
+		
+		// User data related requests.
 		router.add(new APIRoute("/users/:username", "GET", UserController::getUser));
 		router.add(new APIRoute("/users", "POST", UserController::createOrUpdateUser));
+		
+		// Stock data related requests.
+		router.add(new APIRoute("/stocks/:exchange/:symbol", "GET", StockController::getItemData));
+		router.add(new APIRoute("/stocks/:exchange/:symbol/members", "GET", StockController::getIndexComponents));
 	}
 	
 	private static String errorResponseBody(String errorReason) {

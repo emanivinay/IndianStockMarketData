@@ -107,9 +107,9 @@ public class StockDataManager {
 					idsToInsert.add(st.getId());
 					hasIndexChanged = true;
 				} else {
-					// get the persistent version of this item.
+					// get the persistent version of this item and update it's contents with recent data.
 					MarketData it = existingMap.get(st.getSymbol());
-					it.setLastUpdatedAt(now);
+					st.update(it);
 					session.merge(it);
 				}
 			}
@@ -261,6 +261,47 @@ public class StockDataManager {
 	// APIs for client requests.
 	private static final String GET_INDEX_ID_QRY_PAT = "SELECT stock_index_id FROM stock_indexes WHERE index_name = '%s' AND exchange_id = %d";
 	private static final String GET_INDEX_STOCK_IDS_QRY_PAT = "SELECT stock_id FROM index_listings WHERE index_id = %d";
+	
+	/**
+	 * Retrieves the latest data of a single symbol(repr. stock/index) on an exchange.
+	 *  
+	 * @param exchange Code of the exchange.
+	 * @param symbol Stock/index symbol.
+	 * 
+	 * @return Latest data of the symbol.
+	 */
+	public MarketData getStockData(String exchange, String symbol) {
+		if (exchange == null || symbol == null) {
+			return null;
+		}
+		
+		Session session = DataStoreManager.getInstance().getFactory().openSession();
+		Exchange ex = getExchange(exchange, session);
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<MarketData> qry = builder.createQuery(MarketData.class);
+			Root<MarketData> root = qry.from(MarketData.class);
+			qry.select(root).where(builder.equal(root.<Integer>get("exchangeId"), ex.getId()),
+								  builder.equal(root.<Integer>get("symbol"), symbol));
+			List<MarketData> ret = session.createQuery(qry).list();
+			tx.commit();
+			if (ret.size() != 1) {
+				logger.debug("{} item(s) found with symbol {} on exchange {}", ret.size(), symbol, ex.getCode());
+				return null;
+			}
+			return ret.get(0);
+		} catch (HibernateException e) {
+			logger.debug("Error querying for MarketData " + e.getMessage());
+			if (tx != null) {
+				tx.rollback();
+			}
+		} finally {
+			session.close();
+		}
+		return null;
+	}
 	
 	/**
 	 * Retrieves data of the constituent stocks on an index.

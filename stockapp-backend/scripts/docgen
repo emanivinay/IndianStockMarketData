@@ -1,0 +1,8 @@
+#!/bin/bash
+
+DESTDIR=$1
+[[ -z "$1" ]] && DESTDIR=`pwd` && echo "No directory argument provided, generating docs in\
+    current directory"
+
+sourcepath=app-frontend/src/main/java:stock-updater/src/main/java:stockapp-datastore/src/main/java
+javadoc -d "$DESTDIR" -sourcepath "$sourcepath" -subpackages "club.vinnymaker"

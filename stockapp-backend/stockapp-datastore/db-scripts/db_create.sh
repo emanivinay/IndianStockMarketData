@@ -4,7 +4,7 @@
 [[ -z $DBNAME ]] && echo "DBNAME variable not set, exiting" && exit;
 
 # First create the role and database.
-psql -U postgres -v dbname=$DBNAME  -f db_create.sql
+psql -U postgres -v dbname=$DBNAME  -f db_create.sql;
 
 # Now create user data tables
 psql -U postgres -d $DBNAME -f users.sql; 

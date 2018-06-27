@@ -2,7 +2,6 @@ package club.vinnymaker.datastore;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,9 +90,7 @@ public class StockDataManager {
 		Set<String> existingIdSet = existing.stream().map((it) -> it.getSymbol()).collect(Collectors.toSet());
 		Set<String> newIdSet = stocks.stream().map((it) -> it.getSymbol()).collect(Collectors.toSet());
 		String listingsToRemove = getListingsToRemove(newIdSet, existingIdSet);
-		
-		Date now = new Date();
-		
+				
 		try {
 			tx = session.beginTransaction();
 			// First, add new items to the stocks table. We wont be deleting any entries from this table even if
@@ -323,7 +320,7 @@ public class StockDataManager {
 			if (idList.size() != 1) {
 				// Can't have more than 1 index with the same name.
 				tx.commit();
-				return new ArrayList<>();
+				return null;
 			}
 			
 			int indexId = (Integer) idList.get(0);
@@ -356,7 +353,69 @@ public class StockDataManager {
 	 * @return List of all items with a matching name. 
 	 */
 	public Collection<MarketDataLite> getSearchMatches(String nameSubStr) {
-		// TODO(vinay) -> Implement this.
-		return null;
+		Session session = DataStoreManager.getInstance().getFactory().openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<MarketData> qry = builder.createQuery(MarketData.class);
+			Root<MarketData> root = qry.from(MarketData.class);
+			qry.select(root).where(builder.like(root.<String>get("symbol"), "%" + nameSubStr + "%"));
+			List<MarketData> ret = session.createQuery(qry).list();
+			tx.commit();
+			
+			// MarketData items retrieved from db don't have types populated. Should make one more 
+			// query to populate type fields for these objects.
+			populateTypeFields(ret, session);
+			return ret.stream().map((it) -> it.liteWeightVersion()).collect(Collectors.toList());
+		} catch (HibernateException e) {
+			logger.debug("Error querying for stock items " + e.getMessage());
+			if (tx != null) {
+				tx.rollback();
+			}
+			return new ArrayList<>();
+		} finally {
+			session.close();
+		}		
+	}
+	
+	private static final String GET_INDEXES_QRY_PAT = "SELECT exchange_id, index_name FROM stock_indexes"; 
+	
+	/**
+	 * Populates type fields for the given {@link MarketData} items.
+	 * 
+	 * @param items Collection of stocks whose types are to be determined.
+	 * @param session Currently active hibernate session, under whose context this routine runs.
+	 */
+	@SuppressWarnings("rawtypes")
+	private void populateTypeFields(Collection<MarketData> items, Session session) {
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			// There are not many indexes supported, so get them all.
+			List idxPairs = session.createNativeQuery(GET_INDEXES_QRY_PAT).list();
+			tx.commit();
+			
+			for (MarketData it : items) {
+				Integer exID = it.getExchangeId();
+				String sym = it.getSymbol();
+				
+				boolean isAPairing = false;
+				for (Object pair : idxPairs) {
+					Object[] comps = (Object[]) pair;
+					if (exID.equals(comps[0]) && sym.equals(comps[1])) {
+						isAPairing = true;
+						break;
+					}
+				}
+				
+				it.setType(isAPairing ? MarketDataType.INDEX : MarketDataType.STOCK);
+			}
+		} catch (HibernateException e) {
+			logger.debug("Error querying database for stock types " + e.getMessage());
+			if (tx != null) {
+				tx.rollback();
+			}
+		}
 	}
 }

@@ -108,4 +108,8 @@ public class MarketData {
 		other.setPreviousClose(previousClose);
 		other.setVolume(volume);
 	}
+	
+	public MarketDataLite liteWeightVersion() {
+		return new MarketDataLite(exchangeId, symbol, type);
+	}
 }

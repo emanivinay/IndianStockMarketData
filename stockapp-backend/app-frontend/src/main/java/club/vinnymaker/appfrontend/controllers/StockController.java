@@ -1,15 +1,18 @@
 package club.vinnymaker.appfrontend.controllers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import club.vinnymaker.data.MarketData;
+import club.vinnymaker.data.MarketDataLite;
 import club.vinnymaker.datastore.StockDataManager;
 
 /**
@@ -24,6 +27,9 @@ public class StockController extends BaseController {
 	private static final String USERNAME_HEADER = "Username";
 	private static final String EXCHANGE_PARAM = "exchange";
 	private static final String SYMBOL_PARAM = "symbol";
+	private static final String NAME_SUBSTR_KEY = "substr";
+	private static final String RESULTS_KEY = "results";
+	private static final int MIN_SEARCH_KEY_SIZE = 2;
 	
 	/**
 	 * Authenticate the request using username request header.
@@ -32,13 +38,12 @@ public class StockController extends BaseController {
 	 * @return True if successfully authenticated, false otherwise.
 	 */
 	private static boolean authenticate(HttpServletRequest req) {
-		req.getHeader(USERNAME_HEADER);
-		return true;
-		/**if (unameInHeader == null) {
+		String unameInHeader = req.getHeader(USERNAME_HEADER);
+		if (unameInHeader == null) {
 			return false;
 		}
 		
-		return authenticate(req, unameInHeader);*/
+		return authenticate(req, unameInHeader);
 	}
 	
 	/**
@@ -91,7 +96,10 @@ public class StockController extends BaseController {
 			return;
 		}
 		
-		success(resp, new JSONObject(items));
+		JSONArray array = new JSONArray(items);
+		JSONObject obj = new JSONObject();
+		obj.put("items", array);
+		success(resp, obj);
 	}
 	
 	/**
@@ -107,6 +115,16 @@ public class StockController extends BaseController {
 			authFailure(resp);
 			return;
 		}
-		// TODO(vinay) -> To be implemented.
+		
+		String substr = named.get(NAME_SUBSTR_KEY);
+		JSONObject obj = new JSONObject();
+		if (substr == null || substr.length() < MIN_SEARCH_KEY_SIZE) {
+			// Empty string, return an empty result.
+			obj.put(RESULTS_KEY, new ArrayList<>());
+		} else {
+			Collection<MarketDataLite> results = StockDataManager.getInstance().getSearchMatches(substr.toUpperCase());
+			obj.put(RESULTS_KEY, results);
+		}
+		success(resp, obj);
 	}
 }

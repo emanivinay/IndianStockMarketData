@@ -52,6 +52,7 @@ public class RoutingServlet extends HttpServlet {
 		// Stock data related requests.
 		router.add(new APIRoute("/stocks/:exchange/:symbol", "GET", StockController::getItemData));
 		router.add(new APIRoute("/stocks/:exchange/:symbol/members", "GET", StockController::getIndexComponents));
+		router.add(new APIRoute("/stocks/search/:substr", "GET", StockController::getMatches));
 	}
 	
 	private static String errorResponseBody(String errorReason) {

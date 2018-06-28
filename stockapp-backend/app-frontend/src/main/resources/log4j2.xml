@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration strict="true" status="warn">
+	<Properties>
+		<!-- Should change this to appropriate value when deploying the app. -->
+		<Property name="logfile.path">/Users/evinay/programming/app-projects/logs/stockapp/frontend.log</Property>
+	</Properties>
+	
+	<Appenders>
+		<Appender type="File" name="File" fileName="${logfile.path}">
+			<Layout type="PatternLayout">
+				<Pattern>%d [%t] %p %logger - %m%n</Pattern>
+			</Layout>
+		</Appender>
+	</Appenders>
+	
+	<Loggers>
+		<!--  We only log at debug, info and error levels. -->
+		<Root level="debug">
+			<AppenderRef ref="File" />
+		</Root>
+	</Loggers>
+</Configuration>

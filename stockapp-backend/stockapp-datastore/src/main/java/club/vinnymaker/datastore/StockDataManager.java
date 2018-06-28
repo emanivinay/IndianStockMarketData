@@ -344,6 +344,35 @@ public class StockDataManager {
 		}
 		return null;
 	}
+
+	/**
+	 * Retrieves a list of {@link Exchange} objects given their ids.
+	 * 
+	 * @param exIds A list of exchange ids whose data is to be fetched.
+	 * 
+	 * @return A list of {@link Exchange} objects.
+	 */
+	public List<Exchange> getExchanges(Collection<Integer> exIds) {
+		Session session = DataStoreManager.getInstance().getFactory().openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<Exchange> qry = builder.createQuery(Exchange.class);
+			Root<Exchange> root = qry.from(Exchange.class);
+			qry.select(root).where(root.<Integer>get("id").in(exIds));
+			List<Exchange> exchanges = session.createQuery(qry).list();
+			tx.commit();
+			return exchanges;
+		} catch (HibernateException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
+		} finally {
+			session.close();
+		}
+		return new ArrayList<>();
+	}
 	
 	/**
 	 * Returns a list of all matching items, given only part of the name(e.g., stock symbol)
@@ -379,7 +408,44 @@ public class StockDataManager {
 		}		
 	}
 	
-	private static final String GET_INDEXES_QRY_PAT = "SELECT exchange_id, index_name FROM stock_indexes"; 
+	private static final String GET_INDEXES_QRY_PAT = "SELECT exchange_id, index_name FROM stock_indexes";
+	private static final String GET_INDEXES_SINGLE_EXCHANGE_QRY_PAT = "SELECT index_name FROM stock_indexes WHERE exchange_id = %d";
+	
+	/**
+	 * Returns all the indexes of an exchange 
+	 * 
+	 * @param exchangeId Exchange id.
+	 * 
+	 * @return List of Index objects.
+	 */
+	@SuppressWarnings("rawtypes")
+	public List<MarketData> getIndexes(int exchangeId) {
+		Session session = DataStoreManager.getInstance().getFactory().openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			List indexNames = session.createNativeQuery(String.format(GET_INDEXES_SINGLE_EXCHANGE_QRY_PAT, exchangeId)).list();
+			
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<MarketData> query = builder.createQuery(MarketData.class);
+			Root<MarketData> root = query.from(MarketData.class);
+			query.select(root).where(builder.equal(root.<Integer>get("exchangeId"), exchangeId),
+									root.<String>get("symbol").in(indexNames));
+			List<MarketData> ret = session.createQuery(query).list();
+			tx.commit();
+			return ret;
+		} catch (HibernateException e) {
+			logger.debug("Error querying database for indexes of the exchange with id " + exchangeId);
+			logger.debug("Error is " + e.getMessage());
+			if (tx != null) {
+				tx.rollback();
+			}
+		} finally {
+			session.close();
+		}
+		
+		return new ArrayList<>();
+	}
 	
 	/**
 	 * Populates type fields for the given {@link MarketData} items.

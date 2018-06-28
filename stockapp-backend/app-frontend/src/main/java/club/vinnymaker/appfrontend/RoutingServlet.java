@@ -53,6 +53,7 @@ public class RoutingServlet extends HttpServlet {
 		router.add(new APIRoute("/stocks/:exchange/:symbol", "GET", StockController::getItemData));
 		router.add(new APIRoute("/stocks/:exchange/:symbol/members", "GET", StockController::getIndexComponents));
 		router.add(new APIRoute("/stocks/search/:substr", "GET", StockController::getMatches));
+		router.add(new APIRoute("/exchanges/:exids", "GET", StockController::getExchanges));
 	}
 	
 	private static String errorResponseBody(String errorReason) {
@@ -81,6 +82,11 @@ public class RoutingServlet extends HttpServlet {
 		}
 	}
 	
+	/** 
+	 * Returns a dictionary of named parameters in the URI mapped to their values. e.g., for the endpoint
+	 *  /stocks/search/:symbol and a matching request /stocks/search/CEMENT, it returns
+	 *  the map {symbol : CEMENT}.
+	 */
 	private static Map<String, String> getVariableParams(Route route, String path) {
 		Map<String, String> ret = new HashMap<>();
 		for (NamedParameterElement elem : route.getNamedParameterElements()) {

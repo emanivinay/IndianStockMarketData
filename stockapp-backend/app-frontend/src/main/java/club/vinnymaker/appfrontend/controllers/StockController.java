@@ -2,13 +2,15 @@ package club.vinnymaker.appfrontend.controllers;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import club.vinnymaker.data.MarketData;
@@ -29,6 +31,9 @@ public class StockController extends BaseController {
 	private static final String SYMBOL_PARAM = "symbol";
 	private static final String NAME_SUBSTR_KEY = "substr";
 	private static final String RESULTS_KEY = "results";
+	private static final String EXCHANGE_IDS_KEY = "exids";
+	private static final String EXCHANGE_ID_KEY = "exid";
+	
 	private static final int MIN_SEARCH_KEY_SIZE = 2;
 	
 	/**
@@ -44,6 +49,12 @@ public class StockController extends BaseController {
 		}
 		
 		return authenticate(req, unameInHeader);
+	}
+	
+	private static <T> JSONObject stuffArrayIntoObject(String key, Collection<T> array) {
+		JSONObject ret = new JSONObject();
+		ret.put(key, array);
+		return ret;
 	}
 	
 	/**
@@ -96,10 +107,7 @@ public class StockController extends BaseController {
 			return;
 		}
 		
-		JSONArray array = new JSONArray(items);
-		JSONObject obj = new JSONObject();
-		obj.put("items", array);
-		success(resp, obj);
+		success(resp, stuffArrayIntoObject("items", items));
 	}
 	
 	/**
@@ -126,5 +134,62 @@ public class StockController extends BaseController {
 			obj.put(RESULTS_KEY, results);
 		}
 		success(resp, obj);
+	}
+	
+	/**
+	 * Returns all the indexes for the given exchange.
+	 * 
+	 * @param req
+	 * @param resp
+	 * @param named
+	 * 
+	 * @throws IOException
+	 */
+	public static void getIndexes(HttpServletRequest req, HttpServletResponse resp, Map<String, String> named)
+		throws IOException {
+		if (!authenticate(req)) {
+			authFailure(resp);
+			return;
+		}
+		
+		int exId = Integer.parseInt(named.get(EXCHANGE_ID_KEY));
+		success(resp, stuffArrayIntoObject("indexes", StockDataManager.getInstance().getIndexes(exId)));
+	}
+	
+	/**
+	 * Returns information about one or more exchanges.
+	 * 
+	 * @param req
+	 * @param resp
+	 * @param named
+	 * 
+	 * @throws IOException
+	 */
+	public static void getExchanges(HttpServletRequest req, HttpServletResponse resp, Map<String, String> named)
+		throws IOException {
+		if (!authenticate(req)) {
+			authFailure(resp);
+			return;
+		}
+		
+		List<Integer> exIds = processExchangeIdParts(named.get(EXCHANGE_IDS_KEY));
+		if (exIds == null) {
+			error(resp, HttpServletResponse.SC_BAD_REQUEST, "Bad request");
+			return;
+		}
+		
+		success(resp, stuffArrayIntoObject("exchanges", StockDataManager.getInstance().getExchanges(exIds)));
+	}
+	
+	private static List<Integer> processExchangeIdParts(String e) {
+		if (e == null || e.isEmpty()) {
+			return null;
+		}
+		
+		try {
+			return Arrays.asList(e.split(",")).stream().map(Integer::parseInt).collect(Collectors.toList());
+		} catch (NumberFormatException ex) {
+			return null;
+		}
 	}
 }

@@ -95,7 +95,7 @@ public class MarketData {
 	}
 	
 	/**
-	 * Updates an item with outdated data with this object's more recent data.
+	 * Updates an out of date item with this object's more recent data.
 	 * 
 	 * @param other {@link MarketData} item whose data is to be updated. 
 	 */

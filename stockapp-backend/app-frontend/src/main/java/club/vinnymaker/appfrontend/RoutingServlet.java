@@ -72,17 +72,20 @@ public class RoutingServlet extends HttpServlet {
 		pw.close();
 	}
 	
-	private static void checkRequestAndThrow(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private static boolean checkRequestAndThrow(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Route route = router.route(req.getPathInfo());
 		if (!(route instanceof APIRoute)) {
 			sendError(resp, HttpServletResponse.SC_NOT_FOUND, RESOURCE_NOT_FOUND_ERROR);
-			return;
+			return false;
 		}
 		
 		APIRoute aroute = (APIRoute) route;
 		if (!aroute.getRequestMethod().equals(req.getMethod())) {
 			sendError(resp, HttpServletResponse.SC_FORBIDDEN, INCORRECT_REQUEST_METHOD_ERROR);
+			return false;
 		}
+		
+		return true;
 	}
 	
 	/** 
@@ -102,7 +105,10 @@ public class RoutingServlet extends HttpServlet {
 	// Does some sanity checking, set some response headers and call the controller method.
 	private static void handle(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		resp.setHeader("Content-Type", "application/json");
-		checkRequestAndThrow(req, resp);
+		if (!checkRequestAndThrow(req, resp)) {
+			return;
+		}
+		
 		APIRoute route = (APIRoute) router.route(req.getPathInfo());
 		route.getController().view(req, resp, getVariableParams(route, req.getPathInfo()));
 	}

@@ -89,7 +89,11 @@ public class StockDataManager {
 		
 		Set<String> existingIdSet = existing.stream().map((it) -> it.getSymbol()).collect(Collectors.toSet());
 		Set<String> newIdSet = stocks.stream().map((it) -> it.getSymbol()).collect(Collectors.toSet());
-		String listingsToRemove = getListingsToRemove(newIdSet, existingIdSet);
+		Map<String, Integer> existingSymbolIdMap = new HashMap<>();
+		for (MarketData it : existing) {
+			existingSymbolIdMap.put(it.getSymbol(), it.getId());
+		}
+		String listingsToRemove = getListingsToRemove(newIdSet, existingIdSet, existingSymbolIdMap);
 				
 		try {
 			tx = session.beginTransaction();
@@ -112,9 +116,9 @@ public class StockDataManager {
 			}
 			
 			tx.commit();
-			tx = session.beginTransaction();
 			// Next, if the index has changed, add/remove items from index_listings table.
 			if (hasIndexChanged) {
+				tx = session.beginTransaction();
 				List l = session.createNativeQuery(String.format(GET_STOCK_INDEX_ID_QRY_PAT, index.getSymbol())).list();
 				if (l.size() != 1) {
 					tx.commit();
@@ -131,9 +135,9 @@ public class StockDataManager {
 				for (Integer id : idsToInsert) {
 					session.createNativeQuery(String.format(ADD_NEW_INDEX_LISTINGS_QRY_PAT, indexId, id)).executeUpdate();
 				}
+				tx.commit();
 			}
 			
-			tx.commit();
 			return true;
 		} catch (HibernateException e) {
 			logger.debug("Error updating index stocks - " + e.getMessage());
@@ -150,11 +154,11 @@ public class StockDataManager {
 	 * Constructs a string of items to be deleted, to be used in SQL delete query where clauses.
 	 * E.g., "(13, 34, 89)" (quotes for clarity).   
 	 */
-	private String getListingsToRemove(Set<String> newSet, Set<String> existingSet) {
+	private String getListingsToRemove(Set<String> newSet, Set<String> existingSet, Map<String, Integer> eMap) {
 		StringBuffer buffer = new StringBuffer("(");
 		for (String e : existingSet) {
 			if (!newSet.contains(e)) {
-				buffer.append(e + ",");
+				buffer.append(eMap.get(e) + ",");
 			}
 		}
 		
